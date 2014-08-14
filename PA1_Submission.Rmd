@@ -1,11 +1,14 @@
 # Reproducible Research: Peer Assessment 1
 
 
+
 ### Loading and pre-processing the data
+
 
 I created two versions of the data, one that contained NA's and one that omitted them.
 
 The code begins after the user has set their working directory to the folder containing the forked repo files.
+
 
 ```{r}
 act<-read.csv("activity.csv")
@@ -14,7 +17,7 @@ act.na<-na.omit(act)
 
 ### What is the mean total number of steps taken per day?
 
-1. Make a histogram of the total number of steps taken each day
+*1. Make a histogram of the total number of steps taken each day.*
 
 ```{r}
 library(reshape2)
@@ -26,16 +29,22 @@ library(ggplot2)
 qplot(total.steps, data=totalsteps)
 ```
 
-2. Calculate and report the mean and median total number of steps taken per day
+*2. Calculate and report the mean and median total number of steps taken per day.*
 
 ```{r}
 mean(totalsteps$total.steps, na.rm=TRUE)
 median(totalsteps$total.steps,na.rm=TRUE)
 ```
 
+- The mean for total number of steps taken per day (summed by day) is 10,766.19.
+
+- The median for total number of steps taken per day (summed by day) is 10,765.
+
+- These values are for the dataset before missing values were imputed. 
+
 ### What is the average daily activity pattern?
 
-1. Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days.
+*1. Make a time series plot of the 5-minute interval and the average number of steps taken, averaged across all days.*
 
 ```{r}
 library(plyr)
@@ -43,38 +52,40 @@ avginterval<-ddply(act.na, "interval", summarise, avg.steps=mean(steps))
 qplot(interval, avg.steps, data=avginterval, geom="line")
 ```
 
-2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
+*2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?*
 
 ```{r}
 max<-max(avginterval$avg.steps)
 avginterval[avginterval$avg.steps==max,]
 ```
 
+- The 5-minute interval with the maximum number of steps is interval # 835.
+
 ### Imputing missing values
 
-1. Calculate and report the total number of missing values in the dataset
+*1. Calculate and report the total number of missing values in the dataset.*
 
 ```{r}
 nrow(act[act$steps=="NA",])
 ```
 
-2. Devise a strategy for filling in NA's 
+*2. Devise a strategy for filling in NA's.* 
 
-I averaged steps for each interval, averaging across all days (e.g. the output from daily activity pattern, part 1).
+I averaged steps for each interval, averaging across all days (essentially using the output from daily activity pattern, part 1).
 
 ```{r}
 library(plyr)
 impute.avg<- function(x) replace(x, is.na(x), mean(x, na.rm = TRUE))
 ```
 
-3. Create a new dataset that is equal to the original but with missing values filled in.
+*3. Create a new dataset that is equal to the original but with missing values filled in.*
 
 ```{r}
 act2 <- ddply(act, ~ interval, transform, steps = impute.avg(steps))
 act2<-act2[order(act2$date), ]
 ```
 
-4. Make a histogram of the total number of steps taken each day, calculate and report mean and median total steps taken per day.
+*4. Make a histogram of the total number of steps taken each day, calculate and report mean and median total steps taken per day.*
 
 ```{r}
 totalsteps2<-tapply(act2$steps, act2$date, sum)
@@ -86,9 +97,17 @@ mean(totalsteps2$total.steps)
 median(totalsteps2$total.steps)
 ```
 
-5. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps? 
 
-These values differ slightly from the estimates in the first part of the assignment. The mean of total steps is not different after NA's are imputed with interval averages, but what does shift is the median, which now matches the mean exactly. Because we are calculating sums, any imputing of positive values in place of NAs will increase the average total and median total. 
+- The mean for total number of steps taken per day (summed by day) is 10,766.19.
+
+- The median for total number of steps taken per day (summed by day) is 10,766.19.
+
+- These values are for the dataset after missing values were imputed. 
+
+
+*5. Do these values differ from the estimates from the first part of the assignment? What is the impact of imputing missing data on the estimates of the total daily number of steps?* 
+
+Given the strategy I chose for imputing values, the mean of total steps summed by day is not different after missing values are imputed at all. What does shift is the median, which now matches the mean exactly. Because we are calculating sums, any imputing of positive values in place of missing values will increase the average total and median total. 
 
 ### Are there differences in activity patterns between weekdays and weekends?
 
@@ -98,7 +117,7 @@ act2$date<-as.Date(act2$date) # convert date column to date class
 act3<-ddply(act2, ~ date, transform, weekday = weekdays(date)) # identify day of week
 ```
 
-1. Create a new factor variable in the dataset with two levels, weekday and weekend
+*1. Create a new factor variable in the dataset with two levels, weekday and weekend.*
 
 ```{r}
 weekday<-c("Monday","Tuesday","Wednesday","Thursday","Friday")
@@ -106,7 +125,7 @@ act3["daytype"]<-ifelse(act3$weekday %in% weekday==TRUE, "weekday","weekend")
 act3$daytype<-as.factor(act3$daytype)
 ```
 
-2. Make a panel plot containing a time series plot (type "l") of the intervals (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). Plot should look similar to the plot created from simulated data.
+*2. Make a panel plot containing a time series plot (type "l") of the intervals (x-axis) and the average number of steps taken, averaged across all weekday days or weekend days (y-axis). Plot should look similar to the plot created from simulated data.*
 
 ```{r}
 avgdaytype<-ddply(act3, .(interval,daytype), summarise, avg.steps=mean(steps))
